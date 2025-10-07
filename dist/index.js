@@ -5,6 +5,7 @@ var __export = (target, all) => {
 };
 
 // server/index.ts
+import "dotenv/config";
 import express2 from "express";
 
 // server/routes.ts
@@ -48,12 +49,17 @@ import { Pool, neonConfig } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import ws from "ws";
 neonConfig.webSocketConstructor = ws;
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?"
-  );
+var env = process.env.NODE_ENV || "development";
+var dbUrl = process.env.DATABASE_URL;
+if (env === "production" && process.env.DATABASE_URL_PROD) {
+  dbUrl = process.env.DATABASE_URL_PROD;
+} else if (env === "development" && process.env.DATABASE_URL_DEV) {
+  dbUrl = process.env.DATABASE_URL_DEV;
 }
-var pool = new Pool({ connectionString: process.env.DATABASE_URL });
+if (!dbUrl) {
+  throw new Error("Database URL not set for the current environment");
+}
+var pool = new Pool({ connectionString: dbUrl });
 var db = drizzle({ client: pool, schema: schema_exports });
 
 // server/storage.ts
